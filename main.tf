@@ -1,5 +1,5 @@
 terraform {
-  required_version = "0.11.7"
+  required_version = "0.11.1"
 }
 
 data "aws_caller_identity" "current" {}
@@ -23,7 +23,7 @@ data "aws_iam_policy_document" "helm_bucket" {
      identifiers = ["*"],
    }   
     sid = "readaccess"
-    effect = "Allow"
+    effect = "Deny"
     actions = [
       "s3:GetObject"
     ]
@@ -33,7 +33,7 @@ data "aws_iam_policy_document" "helm_bucket" {
     ]
 
     condition {
-      test     = "IpAddress"
+      test     = "NotIpAddress"
       variable = "aws:SourceIp"
 
       values = [
@@ -47,7 +47,7 @@ data "aws_iam_policy_document" "helm_bucket" {
      identifiers = ["*"],
    }   
     sid = "adminaccess"
-    effect = "Allow"
+    effect = "Deny"
     actions = [
       "s3:*"
     ]
@@ -57,7 +57,7 @@ data "aws_iam_policy_document" "helm_bucket" {
     ]
 
     condition {
-      test     = "IpAddress"
+      test     = "NotIpAddress"
       variable = "aws:SourceIp"
 
       values = [
@@ -72,14 +72,15 @@ resource "random_id" "id" {
 }
 
 locals{
-    bucket_name = "${random_id.id.hex}-helm-repo-${terraform.workspace}"
+    #bucket_name = "${random_id.id.hex}-helm-repo-${terraform.workspace}"
+    bucket_name = "${var.bname}" 
     account_arn = "${data.aws_caller_identity.current.arn}"
     }
 
 resource "aws_s3_bucket" "helm-repo-bucket" {
     bucket = "${local.bucket_name}"
     force_destroy = true
-    acl    = "private"
+    acl    = "public-read"
     versioning {
         enabled = true
     }
